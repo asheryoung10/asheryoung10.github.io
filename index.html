@@ -1,1 +1,134 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Website</title>
+    <style>
+        /* CSS Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1em;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2em;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+
+        .content-section {
+            background-color: white;
+            padding: 2em;
+            margin-bottom: 2em;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HTML Content -->
+    <header>
+        <h1>Welcome to My Website</h1>
+    </header>
+
+    <div class="container">
+        <div class="content-section">
+            <h2>About</h2>
+            <p>This is a basic website template with interactive features.</p>
+            <button class="button" onclick="changeColor()">Click Me!</button>
+        </div>
+
+        <div class="content-section">
+            <h2>Current Time</h2>
+            <p id="timeDisplay"></p>
+        </div>
+
+        <div class="content-section">
+            <h2>Interactive List</h2>
+            <input type="text" id="listInput" placeholder="Enter item">
+            <button class="button" onclick="addToList()">Add Item</button>
+            <ul id="itemList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript Code
+        // Change header color on button click
+        function changeColor() {
+            const header = document.querySelector('header');
+            const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+            header.style.backgroundColor = randomColor;
+        }
+
+        // Display current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('timeDisplay').textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime(); // Initial call
+
+        // List functionality
+        function addToList() {
+            const input = document.getElementById('listInput');
+            const list = document.getElementById('itemList');
+            
+            if (input.value.trim()) {
+                const li = document.createElement('li');
+                li.textContent = input.value;
+                li.onclick = function() {
+                    list.removeChild(li);
+                };
+                list.appendChild(li);
+                input.value = '';
+            }
+        }
+
+        // Add hover effect to content sections
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.addEventListener('mouseover', () => {
+                section.style.transform = 'scale(1.02)';
+                section.style.transition = 'transform 0.3s';
+            });
+            
+            section.addEventListener('mouseout', () => {
+                section.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
