@@ -1,134 +1,310 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic Website</title>
-    <style>
-        /* CSS Styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-        }
+<meta charset="UTF-8">
+<title>Maze Search Visualizer</title>
+<style>
+  body {
+    background: #0b0c10;
+    color: #c5c6c7;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+  }
 
-        header {
-            background-color: #333;
-            color: white;
-            text-align: center;
-            padding: 1em;
-        }
+  h1 {
+    color: #66fcf1;
+    margin-bottom: 10px;
+  }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2em;
-        }
+  .controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+  }
 
-        .button {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 15px 32px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
+  .file-box, .algo-box, .order-box {
+    margin: 10px;
+  }
 
-        .button:hover {
-            background-color: #45a049;
-        }
+  select, button, input[type="file"] {
+    background: #1f2833;
+    color: #c5c6c7;
+    border: 1px solid #45a29e;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
 
-        .content-section {
-            background-color: white;
-            padding: 2em;
-            margin-bottom: 2em;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+  select:hover, button:hover {
+    background: #45a29e;
+    color: #0b0c10;
+  }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 1em;
-            }
-        }
-    </style>
+  canvas {
+    background: #1f2833;
+    border: 2px solid #45a29e;
+    display: block;
+    margin: 20px auto;
+  }
+
+  .direction-grid {
+    display: grid;
+    grid-template-columns: 50px 50px 50px;
+    grid-template-rows: 50px 50px 50px;
+    gap: 5px;
+    justify-content: center;
+  }
+
+  .dir-btn {
+    background: #1f2833;
+    color: #66fcf1;
+    border: 1px solid #45a29e;
+    border-radius: 6px;
+    font-size: 20px;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .dir-btn:hover {
+    background: #45a29e;
+    color: #0b0c10;
+  }
+
+  .dir-order {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 12px;
+    color: #ffdf6c;
+  }
+
+  #status {
+    margin-top: 10px;
+    color: #fff;
+  }
+</style>
 </head>
 <body>
-    <!-- HTML Content -->
-    <header>
-        <h1>Welcome to My Website</h1>
-    </header>
 
-    <div class="container">
-        <div class="content-section">
-            <h2>About</h2>
-            <p>This is a basic website template with interactive features.</p>
-            <button class="button" onclick="changeColor()">Click Me!</button>
-        </div>
+<h1>Maze Search Visualizer</h1>
 
-        <div class="content-section">
-            <h2>Current Time</h2>
-            <p id="timeDisplay"></p>
-        </div>
+<div class="controls">
+  <div class="file-box">
+    <input type="file" id="fileInput" accept=".txt">
+    <button id="loadDefault">Load Default Maze</button>
+  </div>
 
-        <div class="content-section">
-            <h2>Interactive List</h2>
-            <input type="text" id="listInput" placeholder="Enter item">
-            <button class="button" onclick="addToList()">Add Item</button>
-            <ul id="itemList"></ul>
-        </div>
+  <div class="algo-box">
+    <label>Algorithm:</label>
+    <select id="algo">
+      <option value="bfs">BFS</option>
+      <option value="dfs">DFS</option>
+    </select>
+  </div>
+
+  <div class="order-box">
+    <label>Neighbor Order:</label>
+    <div class="direction-grid">
+      <div></div>
+      <button class="dir-btn" data-dir="U">↑<span class="dir-order"></span></button>
+      <div></div>
+      <button class="dir-btn" data-dir="L">←<span class="dir-order"></span></button>
+      <div></div>
+      <button class="dir-btn" data-dir="R">→<span class="dir-order"></span></button>
+      <div></div>
+      <button class="dir-btn" data-dir="D">↓<span class="dir-order"></span></button>
+      <div></div>
     </div>
+  </div>
 
-    <script>
-        // JavaScript Code
-        // Change header color on button click
-        function changeColor() {
-            const header = document.querySelector('header');
-            const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
-            header.style.backgroundColor = randomColor;
-        }
+  <button id="runBtn">Run Search</button>
+</div>
 
-        // Display current time
-        function updateTime() {
-            const now = new Date();
-            document.getElementById('timeDisplay').textContent = now.toLocaleTimeString();
-        }
-        setInterval(updateTime, 1000);
-        updateTime(); // Initial call
+<canvas id="mazeCanvas"></canvas>
+<p id="status"></p>
 
-        // List functionality
-        function addToList() {
-            const input = document.getElementById('listInput');
-            const list = document.getElementById('itemList');
-            
-            if (input.value.trim()) {
-                const li = document.createElement('li');
-                li.textContent = input.value;
-                li.onclick = function() {
-                    list.removeChild(li);
-                };
-                list.appendChild(li);
-                input.value = '';
-            }
-        }
+<script>
+const canvas = document.getElementById('mazeCanvas');
+const ctx = canvas.getContext('2d');
+const cellSize = 18;
+let maze = [], width = 0, height = 0, start = null, goals = [];
 
-        // Add hover effect to content sections
-        document.querySelectorAll('.content-section').forEach(section => {
-            section.addEventListener('mouseover', () => {
-                section.style.transform = 'scale(1.02)';
-                section.style.transition = 'transform 0.3s';
-            });
-            
-            section.addEventListener('mouseout', () => {
-                section.style.transform = 'scale(1)';
-            });
-        });
-    </script>
+const defaultMazeText = `37 37
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+X       X X X           X   X     X X
+X XXXXXXX X XXX X XXX XXX XXXXXXX X X
+X       X       X X     X     X X   X
+XXXXX XXXXX XXX X X X XXX XXXXX X XXX
+X   X X X X   X X X X   X X   X X   X
+X XXX X X X XXX XXXXX XXX X XXX XXX X
+X       X     X   X   X     X X X   X
+XXX XXXXXXXXX XXXXXXX XXX XXX X X X X
+X             X       X X   X     X X
+X X XXXXX X XXX X X XXX X XXX XXX X X
+X X X     X X X X X     X   X X X X X
+X X X XXXXXXX X XXXXXXXXX XXX X XXX X
+X X X X     X   X     X     X   X   X
+XXX XXX X XXXXX XXXXX XXX XXX XXXXX X
+X     X X X     X X     X X   XGX X X
+X X X X X XXX XXX XXX XXX X X X X X X
+X X X X X                 X X X     X
+XXX XXXXXXX X X XXXXX XXX X XXX XXXXX
+X       X X X X     X   X     X X   X
+XXXXX X X XXXXXXXXX XXXXXXXXXXX X XXX
+X   X X           X X     X   X X   X
+X XXX XXXXX XXXXXXXXX XXXXX X X XXX X
+X X   X      X        X     X       X
+X X X XXXXX XXX X X X X XXXXXXXXXXXXX
+X X X   X     X X X X       X   X X X
+X X XXX XXX X X X XXXXXXXXX XXX X X X
+X X   X X   X X X   X X   X X X     X
+X XXX XXX XXXXX XXX X X XXXXX X XXXXX
+X       X   X     X X     X   X X   X
+XXX X XXXXX XXXXX XXX XXX X XXX X XXX
+X X X X X X X X     X X   X X   X X X
+X X XXX X X X X XXXXXXXXX X X X X X X
+X   X   X   XG                X     X
+X X X X XXX XXX XXXXXXX XXX XXX XXX X
+XGX X X       X   X       X   X X  SX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`;
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => parseMaze(ev.target.result.trim().split('\n'));
+  reader.readAsText(file);
+});
+
+document.getElementById('loadDefault').addEventListener('click', () => {
+  parseMaze(defaultMazeText.trim().split('\n'));
+});
+
+function parseMaze(lines) {
+  [width, height] = lines[0].split(' ').map(Number);
+  maze = lines.slice(1).map(l => l.split(''));
+  start = null; goals = [];
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++) {
+      if (maze[y][x] === 'S') start = {x, y};
+      if (maze[y][x] === 'G') goals.push({x, y});
+    }
+  resizeCanvas();
+  drawMaze();
+  document.getElementById('status').textContent = 'Maze loaded!';
+}
+
+function resizeCanvas() {
+  canvas.width = width * cellSize;
+  canvas.height = height * cellSize;
+}
+
+function drawMaze(numbers = {}) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++) {
+      const ch = maze[y][x];
+      if (ch === 'X') ctx.fillStyle = '#0b0c10';
+      else if (ch === 'S') ctx.fillStyle = '#45a29e';
+      else if (ch === 'G') ctx.fillStyle = '#ffdf6c';
+      else ctx.fillStyle = '#1f2833';
+      ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+      const key = `${x},${y}`;
+      if (numbers[key] !== undefined) {
+        ctx.fillStyle = '#fff';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(numbers[key], x * cellSize + cellSize/2, y * cellSize + cellSize/2);
+      }
+    }
+}
+
+// Direction order logic
+let orderList = [];
+const dirButtons = document.querySelectorAll('.dir-btn');
+
+dirButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const dir = btn.dataset.dir;
+    const index = orderList.indexOf(dir);
+    if (index !== -1) {
+      orderList.splice(index, 1);
+    } else {
+      orderList.push(dir);
+    }
+    updateDirButtons();
+  });
+});
+
+function updateDirButtons() {
+  dirButtons.forEach(btn => {
+    const dir = btn.dataset.dir;
+    const span = btn.querySelector('.dir-order');
+    const idx = orderList.indexOf(dir);
+    span.textContent = idx !== -1 ? idx + 1 : '';
+  });
+}
+
+function getNeighbors(x, y, order) {
+  const dirs = { U:[0,-1], D:[0,1], L:[-1,0], R:[1,0] };
+  const res = [];
+  for (let d of order) {
+    const [dx, dy] = dirs[d] || [];
+    if (dx === undefined) continue;
+    const nx = x + dx, ny = y + dy;
+    if (ny>=0 && ny<height && nx>=0 && nx<width && maze[ny][nx] !== 'X')
+      res.push({x:nx, y:ny});
+  }
+  return res;
+}
+
+function search(type, order) {
+  const frontier = [];
+  const visited = new Set();
+  const visitedOrder = {};
+  let step = 0, found = false;
+
+  frontier.push({x: start.x, y: start.y});
+  visited.add(`${start.x},${start.y}`);
+  visitedOrder[`${start.x},${start.y}`] = step++;
+
+  while (frontier.length > 0) {
+    const current = type === 'bfs' ? frontier.shift() : frontier.pop();
+
+    if (maze[current.y][current.x] === 'G') {
+      found = true;
+      break;
+    }
+
+    const neighbors = getNeighbors(current.x, current.y, order);
+    const orderedNeighbors = type === 'dfs' ? [...neighbors].reverse() : neighbors;
+
+    for (let n of orderedNeighbors) {
+      const key = `${n.x},${n.y}`;
+      if (!visited.has(key)) {
+        visited.add(key);
+        visitedOrder[key] = step++;
+        frontier.push(n);
+      }
+    }
+  }
+  return {found, steps: step, visitedOrder};
+}
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  if (!maze.length) return alert('Load a maze first!');
+  if (orderList.length === 0) return alert('Select neighbor order!');
+  const algo = document.getElementById('algo').value;
+  const result = search(algo, orderList);
+  drawMaze(result.visitedOrder);
+  document.getElementById('status').textContent =
+    result.found ? `Goal reached in ${result.steps} steps!` : 'No goal found.';
+});
+</script>
 </body>
 </html>
+
