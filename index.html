@@ -100,8 +100,8 @@
   <div class="algo-box">
     <label>Algorithm:</label>
     <select id="algo">
-      <option value="bfs">BFS</option>
       <option value="dfs">DFS</option>
+      <option value="bfs">BFS</option>
     </select>
   </div>
 
@@ -184,7 +184,7 @@ document.getElementById('loadDefault').addEventListener('click', () => {
 });
 
 function parseMaze(lines) {
-  [width, height] = lines[0].split(' ').map(Number);
+  [height, width] = lines[0].split(' ').map(Number);
   maze = lines.slice(1).map(l => l.split(''));
   start = null; goals = [];
   for (let y = 0; y < height; y++)
@@ -223,7 +223,7 @@ function drawMaze(numbers = {}) {
     }
 }
 
-// Direction order logic
+// === Direction order logic ===
 let orderList = [];
 const dirButtons = document.querySelectorAll('.dir-btn');
 
@@ -262,39 +262,49 @@ function getNeighbors(x, y, order) {
   return res;
 }
 
+// === FIXED SEARCH FUNCTION ===
 function search(type, order) {
+  if (!start) {
+    alert("No start point (S) found in maze!");
+    return { found: false, steps: 0, visitedOrder: {} };
+  }
+
   const frontier = [];
   const visited = new Set();
   const visitedOrder = {};
-  let step = 0, found = false;
+  let step = 0;
+  let found = false;
 
   frontier.push({x: start.x, y: start.y});
   visited.add(`${start.x},${start.y}`);
-  visitedOrder[`${start.x},${start.y}`] = step++;
 
   while (frontier.length > 0) {
     const current = type === 'bfs' ? frontier.shift() : frontier.pop();
+
+    // Mark when expanded
+    visitedOrder[`${current.x},${current.y}`] = step++;
 
     if (maze[current.y][current.x] === 'G') {
       found = true;
       break;
     }
 
-    const neighbors = getNeighbors(current.x, current.y, order);
-    const orderedNeighbors = type === 'dfs' ? [...neighbors].reverse() : neighbors;
+    let neighbors = getNeighbors(current.x, current.y, order);
+    if (type === 'dfs') neighbors = [...neighbors].reverse();
 
-    for (let n of orderedNeighbors) {
+    for (let n of neighbors) {
       const key = `${n.x},${n.y}`;
       if (!visited.has(key)) {
         visited.add(key);
-        visitedOrder[key] = step++;
         frontier.push(n);
       }
     }
   }
-  return {found, steps: step, visitedOrder};
+
+  return { found, steps: step, visitedOrder };
 }
 
+// === Run button ===
 document.getElementById('runBtn').addEventListener('click', () => {
   if (!maze.length) return alert('Load a maze first!');
   if (orderList.length === 0) return alert('Select neighbor order!');
@@ -303,6 +313,12 @@ document.getElementById('runBtn').addEventListener('click', () => {
   drawMaze(result.visitedOrder);
   document.getElementById('status').textContent =
     result.found ? `Goal reached in ${result.steps} steps!` : 'No goal found.';
+});
+
+// Auto-load default maze
+window.addEventListener("load", () => {
+  parseMaze(defaultMazeText.trim().split("\n"));
+  updateDirButtons();
 });
 </script>
 </body>
